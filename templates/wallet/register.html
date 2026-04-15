@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Register | Wallet{% endblock %}
+
+{% block content %}
+<main class="relative mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 lg:px-6">
+  <div class="absolute left-0 top-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl"></div>
+  <div class="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-secondary/10 blur-3xl"></div>
+
+  <div class="relative grid w-full gap-10 lg:grid-cols-2">
+    <section class="hidden md:block">
+      <div class="space-y-6">
+        <div class="flex items-center gap-3">
+          <div class="signature-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
+          </div>
+          <p class="font-headline text-2xl font-extrabold text-primary">The Ethereal Vault</p>
+        </div>
+        <h1 class="font-headline text-5xl font-extrabold leading-tight">Build your personal finance hub in minutes.</h1>
+        <p class="max-w-xl text-lg text-slate-600">Registration creates your private workspace with starter categories so each user sees only their own wallet data.</p>
+      </div>
+    </section>
+
+    <section class="rounded-[2rem] bg-white p-8 shadow-panel lg:p-10">
+      <div class="mb-8">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Join The Vault</p>
+        <h2 class="font-headline text-4xl font-extrabold">Create Account</h2>
+      </div>
+
+      <form class="space-y-5" method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.name.id_for_label }}">Name</label>
+          {{ form.name }}
+          {% for error in form.name.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.email.id_for_label }}">Email</label>
+          {{ form.email }}
+          {% for error in form.email.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.password1.id_for_label }}">Password</label>
+          {{ form.password1 }}
+          {% for error in form.password1.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.password2.id_for_label }}">Confirm Password</label>
+          {{ form.password2 }}
+          {% for error in form.password2.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+
+        <button class="signature-gradient w-full rounded-2xl px-5 py-4 font-semibold text-white" type="submit">Register</button>
+      </form>
+
+      <p class="mt-6 text-sm text-slate-500">
+        Already registered?
+        <a class="font-semibold text-primary" href="{% url 'login' %}">Login here</a>
+      </p>
+    </section>
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  for (const element of document.querySelectorAll("input")) {
+    element.classList.add("w-full", "rounded-2xl", "border-0", "bg-surface-low", "px-4", "py-4", "focus:ring-2", "focus:ring-primary/20");
+  }
+</script>
+{% endblock %}

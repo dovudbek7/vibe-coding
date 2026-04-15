@@ -1,0 +1,140 @@
+<!doctype html>
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>{% block title %}Wallet{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#003ec7",
+              secondary: "#006e28",
+              surface: "#f7f9fc",
+              "surface-lowest": "#ffffff",
+              "surface-low": "#f2f4f7",
+              "surface-high": "#e6e8eb",
+              outline: "#737688",
+              "outline-variant": "#c3c5d9",
+              error: "#ba1a1a",
+              tertiary: "#754100",
+            },
+            fontFamily: {
+              headline: ["Plus Jakarta Sans", "sans-serif"],
+              body: ["Inter", "sans-serif"],
+            },
+            boxShadow: {
+              panel: "0 20px 60px -15px rgba(0,0,0,0.06)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .font-headline {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .signature-gradient {
+        background: linear-gradient(135deg, #003ec7 0%, #0052ff 100%);
+      }
+      .glass-panel {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+    </style>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="bg-surface text-slate-900 {% if user.is_authenticated %}pb-24 md:pb-0{% endif %}">
+    {% if user.is_authenticated %}
+      <header class="sticky top-0 z-40 border-b border-outline-variant/40 bg-surface/95 backdrop-blur">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          <a class="flex items-center gap-3" href="{% url 'dashboard' %}">
+            <div class="signature-gradient flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-lg">
+              <span class="material-symbols-outlined">account_balance_wallet</span>
+            </div>
+            <div>
+              <p class="font-headline text-lg font-extrabold tracking-tight text-primary">Wally</p>
+              <p class="text-xs text-slate-500">{{ user.first_name|default:user.email }}</p>
+            </div>
+          </a>
+          <nav class="hidden items-center gap-2 text-sm font-medium md:flex">
+            <a class="rounded-full px-4 py-2 {% if request.path == '/dashboard' or request.path == '/' %}bg-primary text-white{% else %}text-slate-600 hover:bg-white{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
+            <a class="rounded-full px-4 py-2 {% if request.path == '/history' %}bg-primary text-white{% else %}text-slate-600 hover:bg-white{% endif %}" href="{% url 'history' %}">History</a>
+            <a class="rounded-full px-4 py-2 {% if request.path == '/add-transaction' %}bg-primary text-white{% else %}text-slate-600 hover:bg-white{% endif %}" href="{% url 'add_transaction' %}">Add</a>
+            <a class="rounded-full px-4 py-2 {% if request.path == '/assistant' %}bg-primary text-white{% else %}text-slate-600 hover:bg-white{% endif %}" href="{% url 'assistant' %}">Assistant</a>
+            <form action="{% url 'logout' %}" method="post">
+              {% csrf_token %}
+              <button class="rounded-full px-4 py-2 text-slate-600 hover:bg-white" type="submit">Logout</button>
+            </form>
+          </nav>
+          <a class="rounded-full bg-white px-4 py-2 text-sm font-semibold text-primary md:hidden" href="{% url 'add_transaction' %}">Add</a>
+        </div>
+      </header>
+    {% endif %}
+
+    {% if messages %}
+      <div class="mx-auto max-w-6xl px-4 pt-4 sm:px-6">
+        {% for message in messages %}
+          <div class="mb-3 rounded-2xl border border-outline-variant/30 bg-white px-4 py-3 text-sm shadow-sm">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    {% if user.is_authenticated %}
+      <nav class="fixed bottom-0 left-0 right-0 z-50 border-t border-outline-variant/30 bg-white/95 px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 shadow-[0_-10px_30px_rgba(0,0,0,0.06)] backdrop-blur md:hidden">
+        <div class="mx-auto grid max-w-lg grid-cols-5 gap-2">
+          <a class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold {% if request.path == '/dashboard' or request.path == '/' %}bg-primary text-white{% else %}text-slate-500{% endif %}" href="{% url 'dashboard' %}">
+            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+            <span>Home</span>
+          </a>
+          <a class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold {% if request.path == '/history' %}bg-primary text-white{% else %}text-slate-500{% endif %}" href="{% url 'history' %}">
+            <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+            <span>History</span>
+          </a>
+          <a class="signature-gradient -mt-6 flex flex-col items-center justify-center rounded-3xl px-2 py-3 text-[11px] font-semibold text-white shadow-lg" href="{% url 'add_transaction' %}">
+            <span class="material-symbols-outlined text-[24px]">add</span>
+            <span>Add</span>
+          </a>
+          <a class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold {% if request.path == '/assistant' %}bg-primary text-white{% else %}text-slate-500{% endif %}" href="{% url 'assistant' %}">
+            <span class="material-symbols-outlined text-[20px]">smart_toy</span>
+            <span>AI</span>
+          </a>
+          <form action="{% url 'logout' %}" class="contents" method="post">
+            {% csrf_token %}
+            <button class="flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold text-slate-500" type="submit">
+              <span class="material-symbols-outlined text-[20px]">logout</span>
+              <span>Exit</span>
+            </button>
+          </form>
+        </div>
+      </nav>
+    {% endif %}
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

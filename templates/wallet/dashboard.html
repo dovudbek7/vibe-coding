@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Wallet{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+  <section class="mb-8 rounded-[2rem] signature-gradient px-8 py-10 text-white shadow-panel">
+    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-white/70">Total Balance</p>
+    <div class="mt-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <h1 class="font-headline text-5xl font-extrabold tracking-tight">${{ totals.balance|floatformat:2 }}</h1>
+        <p class="mt-3 max-w-xl text-white/80">A focused view of your current wallet health with recent trends and quick currency conversion.</p>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-3">
+        {% for code, amount in currency_totals.items %}
+          <div class="rounded-2xl bg-white/10 px-4 py-3 glass-panel">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-white/70">{{ code }}</p>
+            <p class="mt-1 text-xl font-semibold">{{ amount }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="grid gap-4 md:grid-cols-3">
+    <article class="rounded-[1.75rem] bg-white p-6 shadow-panel">
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Income</p>
+      <p class="mt-3 font-headline text-3xl font-extrabold text-secondary">${{ totals.income|floatformat:2 }}</p>
+    </article>
+    <article class="rounded-[1.75rem] bg-white p-6 shadow-panel">
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Expense</p>
+      <p class="mt-3 font-headline text-3xl font-extrabold text-error">${{ totals.expense|floatformat:2 }}</p>
+    </article>
+    <article class="rounded-[1.75rem] bg-white p-6 shadow-panel">
+      <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Net</p>
+      <p class="mt-3 font-headline text-3xl font-extrabold text-primary">${{ totals.balance|floatformat:2 }}</p>
+    </article>
+  </section>
+
+  <section class="mt-8 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
+    <article class="rounded-[2rem] bg-white p-6 shadow-panel">
+      <div class="mb-5 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Charts</p>
+          <h2 class="font-headline text-2xl font-extrabold">Income vs Expense</h2>
+        </div>
+        <a class="rounded-full bg-surface-low px-4 py-2 text-sm font-semibold text-primary" href="{% url 'add_transaction' %}">Add transaction</a>
+      </div>
+      {{ chart_labels|json_script:"chart-labels" }}
+      {{ chart_income|json_script:"chart-income" }}
+      {{ chart_expense|json_script:"chart-expense" }}
+      <canvas id="financeChart" height="120"></canvas>
+    </article>
+
+    <article class="rounded-[2rem] bg-white p-6 shadow-panel">
+      <div class="mb-5 flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Recent Activity</p>
+          <h2 class="font-headline text-2xl font-extrabold">Last 5 Transactions</h2>
+        </div>
+        <a class="text-sm font-semibold text-primary" href="{% url 'history' %}">View all</a>
+      </div>
+
+      <div class="space-y-4">
+        {% for transaction in recent_transactions %}
+          <div class="flex items-center justify-between rounded-2xl bg-surface-low px-4 py-4">
+            <div class="flex items-center gap-4">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-primary">
+                <span class="material-symbols-outlined">{{ transaction.category.icon|default:"payments" }}</span>
+              </div>
+              <div>
+                <p class="font-semibold">{{ transaction.title }}</p>
+                <p class="text-sm text-slate-500">{{ transaction.category.name }} • {{ transaction.created_at|date:"M d, H:i" }}</p>
+              </div>
+            </div>
+            <p class="font-headline text-lg font-bold {% if transaction.type == 'income' %}text-secondary{% else %}text-error{% endif %}">
+              {% if transaction.type == 'income' %}+{% else %}-{% endif %}${{ transaction.amount|floatformat:2 }}
+            </p>
+          </div>
+        {% empty %}
+          <p class="rounded-2xl bg-surface-low px-4 py-5 text-slate-500">No transactions yet. Add your first record to populate the dashboard.</p>
+        {% endfor %}
+      </div>
+    </article>
+  </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const labels = JSON.parse(document.getElementById("chart-labels").textContent);
+  const income = JSON.parse(document.getElementById("chart-income").textContent);
+  const expense = JSON.parse(document.getElementById("chart-expense").textContent);
+
+  new Chart(document.getElementById("financeChart"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Income",
+          data: income,
+          borderColor: "#006e28",
+          backgroundColor: "rgba(0, 110, 40, 0.15)",
+          fill: true,
+          tension: 0.35,
+        },
+        {
+          label: "Expense",
+          data: expense,
+          borderColor: "#ba1a1a",
+          backgroundColor: "rgba(186, 26, 26, 0.12)",
+          fill: true,
+          tension: 0.35,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom",
+        },
+      },
+    },
+  });
+</script>
+{% endblock %}

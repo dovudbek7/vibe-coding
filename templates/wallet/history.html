@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}History | Wallet{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+  <section class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div>
+      <p class="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Vault Statement</p>
+      <h1 class="font-headline text-4xl font-extrabold">History</h1>
+    </div>
+
+    <form class="grid gap-3 sm:grid-cols-4" method="get">
+      <input type="hidden" name="view" value="{{ view_mode }}">
+      <input class="rounded-2xl border-0 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-primary/20" name="date" type="date" value="{{ selected_date }}">
+      <select class="rounded-2xl border-0 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-primary/20" name="category">
+        <option value="">All categories</option>
+        {% for category in categories %}
+          <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="rounded-2xl bg-primary px-4 py-3 font-semibold text-white" type="submit">Apply filters</button>
+      <a class="rounded-2xl bg-surface-low px-4 py-3 text-center font-semibold text-slate-700" href="{% url 'history' %}?view={{ view_mode }}">Reset</a>
+    </form>
+  </section>
+
+  <div class="mb-6 flex w-full max-w-md rounded-full bg-surface-low p-1.5">
+    <a class="flex-1 rounded-full px-4 py-3 text-center text-sm font-semibold {% if view_mode == 'all' %}bg-white text-primary shadow-sm{% else %}text-slate-500{% endif %}" href="{% url 'history' %}?view=all{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">All Transactions</a>
+    <a class="flex-1 rounded-full px-4 py-3 text-center text-sm font-semibold {% if view_mode == 'category' %}bg-white text-primary shadow-sm{% else %}text-slate-500{% endif %}" href="{% url 'history' %}?view=category{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">By Category</a>
+  </div>
+
+  {% if view_mode == 'all' %}
+    <section class="space-y-4">
+      {% for transaction in page_obj %}
+        <article class="flex flex-col gap-4 rounded-[1.75rem] bg-white p-5 shadow-panel sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-4">
+            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-low text-primary">
+              <span class="material-symbols-outlined">{{ transaction.category.icon|default:"payments" }}</span>
+            </div>
+            <div>
+              <p class="text-lg font-semibold">{{ transaction.title }}</p>
+              <p class="text-sm text-slate-500">{{ transaction.category.name }}{% if transaction.note %} • {{ transaction.note }}{% endif %}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-headline text-xl font-bold {% if transaction.type == 'income' %}text-secondary{% else %}text-error{% endif %}">
+              {% if transaction.type == 'income' %}+{% else %}-{% endif %}${{ transaction.amount|floatformat:2 }}
+            </p>
+            <p class="text-sm text-slate-500">{{ transaction.created_at|date:"M d, Y H:i" }}</p>
+          </div>
+        </article>
+      {% empty %}
+        <p class="rounded-[1.75rem] bg-white px-5 py-6 text-slate-500 shadow-panel">No transactions match the current filters.</p>
+      {% endfor %}
+    </section>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav class="mt-8 flex items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+          <a class="rounded-full bg-white px-4 py-2 text-sm font-semibold text-primary" href="?view=all&page={{ page_obj.previous_page_number }}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Previous</a>
+        {% endif %}
+        <span class="rounded-full bg-surface-low px-4 py-2 text-sm">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="rounded-full bg-white px-4 py-2 text-sm font-semibold text-primary" href="?view=all&page={{ page_obj.next_page_number }}{% if selected_date %}&date={{ selected_date }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}">Next</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <section class="space-y-6">
+      {% for group in grouped_categories %}
+        <article class="rounded-[2rem] bg-white p-6 shadow-panel">
+          <div class="mb-5 flex flex-col gap-3 border-b border-outline-variant/30 pb-5 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-4">
+              <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-low text-primary">
+                <span class="material-symbols-outlined">{{ group.icon }}</span>
+              </div>
+              <div>
+                <p class="font-headline text-2xl font-extrabold">{{ group.name }}</p>
+                <a class="text-sm font-semibold text-primary" href="{% url 'category_detail' group.id %}">Open category page</a>
+              </div>
+            </div>
+            <div class="grid gap-2 text-sm sm:text-right">
+              <p class="text-secondary">Income: ${{ group.total_income|floatformat:2 }}</p>
+              <p class="text-error">Expense: ${{ group.total_expense|floatformat:2 }}</p>
+              <p class="font-semibold">Net: ${{ group.net_total|floatformat:2 }}</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            {% for transaction in group.transactions %}
+              <div class="flex items-center justify-between rounded-2xl bg-surface-low px-4 py-3">
+                <div>
+                  <p class="font-semibold">{{ transaction.title }}</p>
+                  <p class="text-sm text-slate-500">{{ transaction.created_at|date:"M d, Y H:i" }}</p>
+                </div>
+                <p class="font-bold {% if transaction.type == 'income' %}text-secondary{% else %}text-error{% endif %}">
+                  {% if transaction.type == 'income' %}+{% else %}-{% endif %}${{ transaction.amount|floatformat:2 }}
+                </p>
+              </div>
+            {% empty %}
+              <p class="text-slate-500">No transactions in this category.</p>
+            {% endfor %}
+          </div>
+        </article>
+      {% empty %}
+        <p class="rounded-[1.75rem] bg-white px-5 py-6 text-slate-500 shadow-panel">No category data matches the current filters.</p>
+      {% endfor %}
+    </section>
+  {% endif %}
+</main>
+{% endblock %}

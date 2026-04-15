@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Transaction | Wallet{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-3xl px-4 py-6 sm:px-6 md:py-8">
+  <section class="rounded-[1.75rem] bg-white p-5 shadow-panel sm:rounded-[2rem] sm:p-8">
+    <div class="mb-8">
+      <p class="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary">New Entry</p>
+      <h1 class="font-headline text-3xl font-extrabold sm:text-4xl">Add Transaction</h1>
+      <p class="mt-2 text-slate-500">The form submits with AJAX, so new transactions save without a full page refresh.</p>
+    </div>
+
+    <div class="mb-4 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700" id="ajax-error"></div>
+
+    <form class="grid gap-5" id="transaction-form" method="post">
+      {% csrf_token %}
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="md:col-span-2">
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.title.id_for_label }}">Title</label>
+          {{ form.title }}
+        </div>
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.amount.id_for_label }}">Amount</label>
+          {{ form.amount }}
+        </div>
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.type.id_for_label }}">Type</label>
+          {{ form.type }}
+        </div>
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.category.id_for_label }}">Category</label>
+          {{ form.category }}
+        </div>
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.created_at.id_for_label }}">Date & time</label>
+          {{ form.created_at }}
+        </div>
+        <div class="md:col-span-2">
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.note.id_for_label }}">Note</label>
+          {{ form.note }}
+        </div>
+      </div>
+
+      <button class="signature-gradient rounded-2xl px-5 py-4 font-semibold text-white" type="submit">Save transaction</button>
+    </form>
+  </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const form = document.getElementById("transaction-form");
+  const errorBox = document.getElementById("ajax-error");
+  const createdAtInput = document.getElementById("{{ form.created_at.id_for_label }}");
+
+  function setCurrentDateTime() {
+    if (!createdAtInput) return;
+    const now = new Date();
+    const timezoneOffset = now.getTimezoneOffset();
+    const localDate = new Date(now.getTime() - timezoneOffset * 60000);
+    createdAtInput.value = localDate.toISOString().slice(0, 16);
+  }
+
+  if (createdAtInput && !createdAtInput.value) {
+    setCurrentDateTime();
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    errorBox.classList.add("hidden");
+
+    const response = await fetch("{% url 'add_transaction' %}", {
+      method: "POST",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: new FormData(form),
+    });
+
+    const payload = await response.json();
+    if (response.ok) {
+      window.location.href = payload.redirect_url;
+      return;
+    }
+
+    const errors = Object.entries(payload.errors).map(([field, messages]) => `${field}: ${messages.join(", ")}`);
+    errorBox.textContent = errors.join(" | ");
+    errorBox.classList.remove("hidden");
+  });
+</script>
+{% endblock %}

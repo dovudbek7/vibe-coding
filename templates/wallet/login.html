@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Login | Wallet{% endblock %}
+
+{% block content %}
+<main class="mx-auto grid min-h-screen max-w-6xl grid-cols-1 overflow-hidden px-4 py-8 lg:grid-cols-12 lg:px-6">
+  <section class="relative hidden overflow-hidden rounded-[2rem] lg:col-span-7 lg:flex lg:min-h-[760px] lg:flex-col lg:justify-end lg:p-14">
+    <div class="absolute inset-0 signature-gradient"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_30%)]"></div>
+    <div class="relative z-10 space-y-6 text-white">
+      <div class="flex items-center gap-3">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+          <span class="material-symbols-outlined">shield_lock</span>
+        </div>
+        <p class="font-headline text-2xl font-extrabold">The Ethereal Vault</p>
+      </div>
+      <h1 class="font-headline max-w-xl text-5xl font-extrabold leading-tight">Secure your money story in one elegant dashboard.</h1>
+      <p class="max-w-lg text-lg text-white/80">Track balance, expenses, categories, and insights with a clean wallet experience powered by Django.</p>
+    </div>
+  </section>
+
+  <section class="flex items-center justify-center rounded-[2rem] bg-white p-8 shadow-panel lg:col-span-5 lg:rounded-l-none lg:p-14">
+    <div class="w-full max-w-md space-y-8">
+      <div>
+        <p class="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Welcome Back</p>
+        <h2 class="font-headline text-4xl font-extrabold tracking-tight">Login</h2>
+        <p class="mt-2 text-slate-500">Use your email and password to enter your wallet.</p>
+      </div>
+
+      <form class="space-y-5" method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.username.id_for_label }}">Email</label>
+          <input class="w-full rounded-2xl border-0 bg-surface-low px-4 py-4 focus:ring-2 focus:ring-primary/20" id="{{ form.username.id_for_label }}" name="{{ form.username.html_name }}" type="email" value="{{ form.username.value|default:'' }}" placeholder="name@example.com" required />
+          {% for error in form.username.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div>
+          <label class="mb-2 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500" for="{{ form.password.id_for_label }}">Password</label>
+          <input class="w-full rounded-2xl border-0 bg-surface-low px-4 py-4 focus:ring-2 focus:ring-primary/20" id="{{ form.password.id_for_label }}" name="{{ form.password.html_name }}" type="password" required />
+          {% for error in form.password.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+
+        <button class="signature-gradient w-full rounded-2xl px-5 py-4 font-semibold text-white" type="submit">Login</button>
+      </form>
+
+      <p class="text-sm text-slate-500">
+        Don’t have an account?
+        <a class="font-semibold text-primary" href="{% url 'register' %}">Create one</a>
+      </p>
+    </div>
+  </section>
+</main>
+{% endblock %}
